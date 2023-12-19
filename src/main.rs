@@ -20,7 +20,7 @@ fn handle() -> Result<(), io::Error>{
     let mut host_fd = fs::OpenOptions::new().append(true).open(host_path)?;
     println!("Writing new lines");
     host_fd.write(HOST_CONTEXT)?;
-    println!("Successe, press any key to continue\n You can also try to clear your browser cookies");
+    println!("Successe, press any key to continue\n You can also try to clear your browser cookies and restart it");
     std::io::stdin().read_line(&mut String::new())?;
     Ok(())
 }
