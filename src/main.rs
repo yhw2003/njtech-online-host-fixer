@@ -93,6 +93,7 @@ async fn clear_cookie() -> Result<(), io::Error> {
         std::io::stdin().read_line(&mut String::new())?;
         return Ok(());
     };
+    
     if input == "2" {
         println!("Clearing cookies in FireFox of online.njtech.edu.cn");
         println!("Open sqlite file");
