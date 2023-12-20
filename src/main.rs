@@ -103,7 +103,7 @@ async fn clear_cookie() -> Result<(), io::Error> {
         let _ = sqlx::query(
             "
             DELETE FROM moz_cookies WHERE name = 'mars_token';
-            DELETE FROM cookies WHERE name = 'sso_validate_token';
+            DELETE FROM moz_cookies WHERE name = 'sso_validate_token';
         ",
         )
         .execute(&pool)
