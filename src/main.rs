@@ -1,28 +1,31 @@
+use home::home_dir;
+use sqlx;
 use std::fs;
 use std::io;
-use std::path::Path;
 use std::io::Write;
-use home::home_dir;
+use std::path::Path;
 use std::path::PathBuf;
-use sqlx;
 
-static HOST_CONTEXT :&[u8]= "\n202.119.245.10 online.njtech.edu.cn".as_bytes();
+static HOST_CONTEXT: &[u8] = "\n202.119.245.10 online.njtech.edu.cn".as_bytes();
 
 #[cfg(target_os = "windows")]
-fn host_handle() -> Result<(), io::Error>{
+fn host_handle() -> Result<(), io::Error> {
     println!("Editing host");
     let os_str: &'static str = std::env::consts::OS;
     println!("Please ensure your os is {os_str} [Y/n]");
     let input = std::io::stdin();
     let mut buf = String::new();
     input.read_line(&mut buf)?;
-    let (i , _) = buf.split_at(1);
+    let (i, _) = buf.split_at(1);
     if i != "y" && i != "Y" {
         panic!("Stopped")
     }
     //Backup host files
     let host_path = Path::new("C:\\Windows\\System32\\drivers\\etc\\hosts");
-    println!("Backing up os old host file from {} to C:\\host_old",host_path.to_str().unwrap());
+    println!(
+        "Backing up os old host file from {} to C:\\host_old",
+        host_path.to_str().unwrap()
+    );
     let backup_path = Path::new("C:\\host_old");
     if backup_path.exists() {
         println!("Warning: your host file won't be backed up, maybe host backup is existed")
@@ -39,17 +42,16 @@ fn host_handle() -> Result<(), io::Error>{
 }
 
 #[cfg(target_os = "windows")]
-async fn clear_cookie() -> Result<(), io::Error>{
-
-
+async fn clear_cookie() -> Result<(), io::Error> {
     let prefix = home_dir().unwrap();
     let fire_fox_prefix = prefix.join("AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\");
-    let chrome_prefix = prefix.join("AppData\\Local\\Google\\Chrome\\User Data\\Default\\Network\\Cookies");
-    // find cookie file 
+    let chrome_prefix =
+        prefix.join("AppData\\Local\\Google\\Chrome\\User Data\\Default\\Network\\Cookies");
+    // find cookie file
     let mut base_path_firefox = Box::new(fire_fox_prefix.as_path());
     let base_path_chrome = Box::new(chrome_prefix.as_path());
     let bufpath = base_path_firefox.read_dir()?;
-    let prc:Box<PathBuf>;
+    let prc: Box<PathBuf>;
     for path in bufpath {
         match path {
             Ok(path) => {
@@ -59,11 +61,14 @@ async fn clear_cookie() -> Result<(), io::Error>{
                     break;
                 }
             }
-            Err(_) => {continue;}
+            Err(_) => {
+                continue;
+            }
         }
         base_path_firefox = Box::new(Path::new("Not Found"));
     }
-    println!("select your browser\n  1. Google Chrome (cookie at {})\n  2. FireFox (cookie at {})",
+    println!(
+        "select your browser\n  1. Google Chrome (cookie at {})\n  2. FireFox (cookie at {})",
         base_path_chrome.to_str().unwrap(),
         base_path_firefox.to_str().unwrap()
     );
@@ -75,9 +80,14 @@ async fn clear_cookie() -> Result<(), io::Error>{
         println!("Clearing cookies in Google Chrome of online.njtech.edu.cn");
         let db_uri = format!("sqlite://{}", base_path_chrome.to_str().unwrap());
         let pool = sqlx::SqlitePool::connect(&db_uri).await.unwrap();
-        let _ = sqlx::query("
+        let _ = sqlx::query(
+            "
             DELETE FROM cookies WHERE name = 'mars_token'
-        ").execute(&pool).await.map_err(|e| panic!("Sqlite Error: {:?}", e));
+        ",
+        )
+        .execute(&pool)
+        .await
+        .map_err(|e| panic!("Sqlite Error: {:?}", e));
         return Ok(());
     };
     if input == "2" {
@@ -87,17 +97,25 @@ async fn clear_cookie() -> Result<(), io::Error>{
             println!("Clearing cookies in FireFox of online.njtech.edu.cn");
             let db_uri = format!("sqlite://{}", base_path_firefox.to_str().unwrap());
             let pool = sqlx::SqlitePool::connect(&db_uri).await.unwrap();
-            let _ = sqlx::query("
+            let _ = sqlx::query(
+                "
                 DELETE FROM moz_cookies WHERE name = 'mars_token'
-            ").execute(&pool).await.map_err(|e| panic!("Sqlite Error: {:?}", e));
-        return Ok(());
+            ",
+            )
+            .execute(&pool)
+            .await
+            .map_err(|e| panic!("Sqlite Error: {:?}", e));
+            return Ok(());
         };
     }
+    println!("Successe, press enter to continue\n You can also try to clear your browser cookies and restart it");
+    std::io::stdin().read_line(&mut String::new())?;
+
     Ok(())
 }
 
 #[tokio::main]
-async fn main() -> Result<(), io::Error>{
+async fn main() -> Result<(), io::Error> {
     println!("Add host[H] or clear cookies[C]? [H/C/A(both)/N]");
     let mut input = String::new();
     std::io::stdin().read_line(&mut input)?;
