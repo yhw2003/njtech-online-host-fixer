@@ -78,38 +78,40 @@ async fn clear_cookie() -> Result<(), io::Error> {
     println!("Open sqlite file");
     if input == "1" {
         println!("Clearing cookies in Google Chrome of online.njtech.edu.cn");
-        let db_uri = format!("sqlite://{}", base_path_chrome.to_str().unwrap());
-        let pool = sqlx::SqlitePool::connect(&db_uri).await.unwrap();
+        let db_uri = format!("sqlite:file:{}?mode=rwc", base_path_chrome.to_str().unwrap());
+        let pool = sqlx::SqlitePool::connect(&db_uri).await.expect("Permission denied");
         let _ = sqlx::query(
             "
-            DELETE FROM cookies WHERE name = 'mars_token'
+            DELETE FROM cookies WHERE name = 'mars_token';
+            DELETE FROM cookies WHERE name = 'sso_validate_token';
         ",
         )
         .execute(&pool)
         .await
-        .map_err(|e| panic!("Sqlite Error: {:?}", e));
+        .expect("sql error");
+        println!("Successe, press enter to continue");
+        std::io::stdin().read_line(&mut String::new())?;
         return Ok(());
     };
     if input == "2" {
         println!("Clearing cookies in FireFox of online.njtech.edu.cn");
         println!("Open sqlite file");
-        if input == "1" {
-            println!("Clearing cookies in FireFox of online.njtech.edu.cn");
-            let db_uri = format!("sqlite://{}", base_path_firefox.to_str().unwrap());
-            let pool = sqlx::SqlitePool::connect(&db_uri).await.unwrap();
-            let _ = sqlx::query(
-                "
-                DELETE FROM moz_cookies WHERE name = 'mars_token'
-            ",
-            )
-            .execute(&pool)
-            .await
-            .map_err(|e| panic!("Sqlite Error: {:?}", e));
-            return Ok(());
-        };
-    }
-    println!("Successe, press enter to continue\n You can also try to clear your browser cookies and restart it");
-    std::io::stdin().read_line(&mut String::new())?;
+        println!("Clearing cookies in FireFox of online.njtech.edu.cn");
+        let db_uri = format!("sqlite:file:{}?mode=rwc", base_path_firefox.to_str().unwrap());
+        let pool = sqlx::SqlitePool::connect(&db_uri).await.expect("Permission denied");
+        let _ = sqlx::query(
+            "
+            DELETE FROM moz_cookies WHERE name = 'mars_token';
+            DELETE FROM cookies WHERE name = 'sso_validate_token';
+        ",
+        )
+        .execute(&pool)
+        .await
+        .expect("sql error");
+        println!("Successe, press enter to continue");
+        std::io::stdin().read_line(&mut String::new())?;
+        return Ok(());
+    };
 
     Ok(())
 }
