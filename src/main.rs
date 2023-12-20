@@ -7,6 +7,15 @@ static HOST_CONTEXT :&[u8]= "\n202.119.245.10 online.njtech.edu.cn".as_bytes();
 
 #[cfg(target_os = "windows")]
 fn handle() -> Result<(), io::Error>{
+    let os_str: &'static str = std::env::consts::OS;
+    println!("Please ensure your os is {os_str} [Y/n]");
+    let input = std::io::stdin();
+    let mut buf = String::new();
+    input.read_line(&mut buf)?;
+    let (i , _) = buf.split_at(1);
+    if i != "y" && i != "Y" {
+        panic!("Stopped")
+    }
     //Backup host files
     let host_path = Path::new("C:\\Windows\\System32\\drivers\\etc\\hosts");
     println!("Backing up os old host file from {} to C:\\host_old",host_path.to_str().unwrap());
@@ -25,15 +34,6 @@ fn handle() -> Result<(), io::Error>{
     Ok(())
 }
 fn main() -> Result<(), io::Error>{
-    let os_str: &'static str = std::env::consts::OS;
-    println!("Please ensure your os is {os_str} [Y/n]");
-    let input = std::io::stdin();
-    let mut buf = String::new();
-    input.read_line(&mut buf)?;
-    let (i , _) = buf.split_at(1);
-    if i != "y" && i != "Y" {
-        panic!("Stopped")
-    }
     handle()
 }
 
